@@ -1,16 +1,22 @@
 {
     "name": "Clario OCR (Enterprise)",
-    "version": "1.0.0",
-    "category": "Accounting",
-    "summary": "Enterprise OCR for Invoices & Receipts",
-    
-    # ---------------------------------------------------------
-    # FIXED: Added 'mail' so Odoo knows to load the chatter
-    # ---------------------------------------------------------
-    "depends": ["base", "web", "mail", "account"],
+    "version": "17.0.1.0.0",
+    "category": "Accounting/Accounting",
+    "summary": "Enterprise-grade OCR automation for invoices and receipts",
+    "author": "Clario",
+    "website": "https://yourwebsite.com",
+    "license": "OPL-1",
+
+    "depends": [
+        "base",
+        "web",
+        "mail",
+        "account",
+    ],
 
     "data": [
         "security/ir.model.access.csv",
+        "data/ocr_sequences.xml",
         "views/actions.xml",
         "views/menus.xml",
         "views/dashboard.xml",
@@ -20,6 +26,7 @@
         "views/invoice.xml",
         "views/receipt.xml",
     ],
+
     "application": True,
     "installable": True,
 }

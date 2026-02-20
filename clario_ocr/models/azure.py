@@ -2,6 +2,7 @@
 from azure.core.credentials import AzureKeyCredential
 from azure.ai.documentintelligence import DocumentIntelligenceClient
 from azure.ai.documentintelligence.models import AnalyzeDocumentRequest
+from odoo.exceptions import UserError
 import logging
 import re
 
@@ -18,7 +19,27 @@ class AzureInvoiceService:
     - Provide raw Azure numbers + strong computed hints (items sums) for the Odoo layer to decide.
     """
 
-    def __init__(self, endpoint: str, key: str):
+    def __init__(self, env):
+        """
+        Load Azure configuration securely from Odoo settings.
+        Marketplace-safe implementation.
+        """
+
+        self.env = env
+
+        params = env['ir.config_parameter'].sudo()
+
+        endpoint = params.get_param('clario_ocr.azure_endpoint')
+        key = params.get_param('clario_ocr.azure_api_key')
+
+        if not endpoint or not key:
+            raise UserError(
+                "Azure Document Intelligence is not configured.\n\n"
+                "Please go to:\n"
+                "Settings → Clario OCR → Azure Configuration\n"
+                "and provide Endpoint and API Key."
+            )
+
         self.client = DocumentIntelligenceClient(
             endpoint=endpoint,
             credential=AzureKeyCredential(key),

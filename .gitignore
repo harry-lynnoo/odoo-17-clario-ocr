@@ -1,8 +1,0 @@
-db-data/
-__pycache__/
-*.log
-*.pyc
-*.pyo
-.env
-docker-compose.yml
-odoo-conf

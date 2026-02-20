@@ -1,225 +1,79 @@
-# **Clario — Odoo OCR Invoice Processing Addon**
+# Clario OCR – Enterprise-Grade Invoice Scanning for Odoo 17
 
-Clario is a custom Odoo extension designed to simplify invoice and receipt management using OCR (Optical Character Recognition).  
-It allows users to upload images/PDFs of invoices, extract key information using OCR + NLP, and automatically populate Odoo Accounting and Expenses modules.
+Clario OCR is an enterprise-grade invoice and receipt scanning module for Odoo 17.  
+It integrates Microsoft Azure Document Intelligence to automatically extract structured financial data from supplier invoices and receipts.
 
-This project is the Senior Project 2 (SP2) for **Assumption University**, built by a team of developers using Dockerized Odoo.
-
----
-
-## 🚀 **Features**
-
-### ✔️ Current
-- Full Dockerized Odoo development environment  
-- Custom OCR addon: `erp_ocr_addon`  
-- Clean Git-ready project structure  
-- Ready for team collaboration  
-
-### ✔️ Planned Features
-- Upload invoices & receipts (PDF, JPG, PNG)
-- OCR extraction via Google Vision API or Tesseract
-- NLP parsing for:
-  - Vendor name  
-  - Invoice number  
-  - Date  
-  - Total & VAT  
-  - Line items (optional)
-- Auto-create:
-  - Vendor Bills in Accounting (`account.move`)
-  - Expense records in HR Expenses (`hr.expense`)
-- Editable preview screen
-- Invoice analytics dashboard
+The module converts scanned documents into draft vendor bills with intelligent field mapping, reducing manual data entry and improving accounting efficiency.
 
 ---
 
-# 🧱 **Tech Stack**
+## Key Features
 
-| Component | Technology |
-|----------|------------|
-| ERP Engine | Odoo 17 |
-| OCR | Google Vision API / Tesseract |
-| Backend | Python (Odoo ORM) |
-| Database | PostgreSQL 15 |
-| Environment | Docker & Docker Compose |
-| UI | Odoo XML Views |
-| Collaboration | GitHub |
+- Automatic invoice data extraction using Azure AI
+- Vendor detection and intelligent partner matching
+- VAT, subtotal, and total validation logic
+- Reference number extraction and fallback handling
+- Multi-currency support
+- Seamless integration with Odoo 17 Accounting
+- Secure Azure API key configuration via Odoo Settings
 
 ---
 
-# 📂 **Project Structure**
+## Installation
 
-```
-clario/
-│
-├── addons/
-│   └── erp_ocr_addon/
-│       ├── models/
-│       ├── views/
-│       ├── security/
-│       ├── controllers/
-│       ├── __manifest__.py
-│       └── __init__.py
-│
-├── odoo-conf/
-│   └── odoo.conf
-│
-├── docker-compose.yml
-└── README.md
-```
+1. Copy the module into your Odoo `addons` directory.
+2. Restart the Odoo server.
+3. Update the App list.
+4. Search for **Clario OCR** and click Install.
 
 ---
 
-# 🐳 **Installation & Setup (For Team Members)**
+## Python Dependencies
 
-Only **Docker Desktop** is required — no Odoo installation needed.
+If you are running Odoo in a self-hosted environment, install:
 
-### **1. Clone the repository**
+pip install -r requirements.txt
 
-```bash
-git clone https://github.com/ThuYammT/clario.git
-cd clario
-```
+## Azure Configuration Guide
 
-### **2. Start the system**
+1. Create a Microsoft Azure account.
+2. Create a **Document Intelligence** resource.
+3. Obtain your Endpoint URL and API Key.
+4. In Odoo, go to:
 
-```bash
-docker compose up -d
-```
+   Settings → Clario OCR
 
-This will start:
-- Odoo 17  
-- PostgreSQL 15  
-- Your custom addon volume  
+5. Enter your Azure Endpoint and API Key.
+6. Click Save.
 
-### **3. Open Odoo**
-
-Browser:
-
-```
-http://localhost:8069
-```
-
-Create a database:
-
-- Name: `erp_ocr_dev`
-- Email: any
-- Password: any
-
-### **4. Install the OCR Addon**
-
-1. Go to **Apps**
-2. Remove all filters  
-3. Click **Update Apps List**
-4. Search:
-
-```
-ERP OCR Addon
-```
-
-5. Install
+⚠ OCR processing will be disabled until Azure credentials are configured.
 
 ---
 
-# 🧑‍💻 **Developer Workflow**
+## External Service Requirement
 
-### Restart after code changes:
+This module requires a Microsoft Azure Document Intelligence subscription.
 
-```bash
-docker compose restart odoo
-```
-
-### View logs:
-
-```bash
-docker compose logs -f odoo
-```
-
-### Stop services:
-
-```bash
-docker compose down
-```
+Users must provide their own Azure endpoint and API key.  
+Azure service fees are charged separately by Microsoft and are not included in the module price.
 
 ---
 
-# 🤝 **Team Contribution Workflow (Git)**
+## Technical Specifications
 
-### Pull latest before starting work:
-
-```bash
-git pull origin main
-```
-
-### Create a feature branch:
-
-```bash
-git checkout -b feature/ocr-upload
-```
-
-### Push your branch:
-
-```bash
-git push -u origin feature/ocr-upload
-```
-
-### Commit regularly:
-
-```bash
-git add .
-git commit -m "Implemented OCR upload form"
-git push
-```
-
-### Open a Pull Request → Review → Merge into main.
+- Compatible with Odoo 17
+- Uses standard Odoo ORM architecture
+- No hardcoded credentials
+- Multi-company compatible
+- Fully uninstallable without data corruption
 
 ---
 
-# 🛡️ **.gitignore Rules**
+## Limitations
 
-The following are excluded from GitHub:
+- OCR accuracy depends on document quality and Azure service performance.
+- Internet connection is required for OCR processing.
 
-```
-db-data/
-__pycache__/
-*.log
-*.pyc
-*.pyo
-.env
-```
+## License
 
-This prevents:
-- Huge database files  
-- Cache  
-- Logs  
-- Secrets  
-from being uploaded.
-
----
-
-# 🔮 **Future Enhancements**
-- AI accuracy scoring  
-- Thai OCR improvements  
-- Auto-detect vendor based on past invoices  
-- Fraud & risky invoice detection  
-- LINE OA integration for mobile uploads  
-
----
-
-# 👥 **Authors**
-
-- Thu Ya Myint Myat Thein
-- S Harry Lynn Oo
-- Hein Htet Moe Tun
-
-```bash
-docker compose down
-docker compose up -d
-```
-
-Or contact your team.
-
----
-
-# 🎉 **Clario is ready for development!**
-Next steps: create menus, upload form, OCR integration, NLP parsing, and accounting automation.
-
+This module is released under the OPL-1 license.
