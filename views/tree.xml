@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+  <record id="view_ocr_document_tree" model="ir.ui.view">
+    <field name="name">ocr.document.tree</field>
+    <field name="model">ocr.document</field>
+    <field name="arch" type="xml">
+      <tree string="OCR Documents" default_order="upload_date desc">
+
+        <field name="document_type"/>
+        <field name="name"/>
+
+        <field name="invoice_id"/>
+        <field name="invoice_date"/>
+
+        <field name="vendor_name"/>
+        <field name="customer_name"/>
+
+        <field name="status"/>
+        <field name="confidence_score"/>
+
+        <field name="subtotal_amount"/>
+        <field name="vat_amount"/>
+        <field name="total_amount"/>
+
+        <field name="upload_date"/>
+        <field name="ocr_run_at"/>
+
+      </tree>
+    </field>
+  </record>
+
+</odoo>

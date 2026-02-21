@@ -1,0 +1,18 @@
+Odoo Proprietary License v1.0 (OPL-1)
+
+This software and associated files (the "Software") may only be used
+if you have purchased a valid license from the authors or from
+Odoo Apps Store.
+
+You may develop Odoo modules that use the Software as a library
+by depending on it, importing it and using its resources.
+
+You may not:
+- Modify the Software and redistribute it.
+- Redistribute the Software without purchasing a license.
+- Publish, distribute, sublicense, or sell copies of the Software.
+
+The above copyright notice and this permission notice must be included
+in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
