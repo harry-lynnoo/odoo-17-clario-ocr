@@ -29,6 +29,12 @@
         "views/receipt.xml",
     ],
 
+    "images": [
+    "static/description/thumbnail.png",
+    "static/description/screenshot1.png",
+    "static/description/screenshot2.png",
+    ],
+
     "application": True,
     "installable": True,
 }
