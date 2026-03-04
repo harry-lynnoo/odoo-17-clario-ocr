@@ -1,13 +1,13 @@
 {
     "name": "Clario OCR (Enterprise)",
-    "version": "17.0.1.0.0",
+    "version": "17.0.1.0.1",
     "category": "Accounting",
     "summary": "Enterprise-grade OCR automation for invoices and receipts",
     "author": "Clario",
     "maintainer": "Clario",
     "license": "OPL-1",
-    "price": 199.00,
-    "currency": "USD",
+    # "price": 199.00,
+    # "currency": "USD",
 
     "depends": [
         "base",
