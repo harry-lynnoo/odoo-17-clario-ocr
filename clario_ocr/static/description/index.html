@@ -64,39 +64,124 @@
 
     <hr style="margin:40px 0;">
 
-    <!-- Screenshots -->
-    <h2 style="font-size:28px;">Screenshots</h2>
+    <!-- Video Guides -->
+    <h2 style="font-size:28px;">Video Guides</h2>
 
-    <div style="text-align:center;">
-        <img src="screenshot1.png" style="width:90%; margin:20px 0; border-radius:8px;">
-        <img src="screenshot2.png" style="width:90%; margin:20px 0; border-radius:8px;">
+    <!-- Video 1 -->
+    <h3 style="font-size:22px; margin-top:30px;">1. Module Installation in Odoo</h3>
+
+    <div style="text-align:center; margin-top:20px;">
+        <video width="90%" autoplay muted loop playsinline preload="metadata">
+            <source src="video1.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
     </div>
 
-    <hr style="margin:40px 0;">
-
-    <!-- Requirements -->
-    <h2 style="font-size:28px;">Disclaimer:External Service Requirement</h2>
-
-    <p style="font-size:16px; line-height:1.8;">
-        This module requires a Microsoft Azure Document Intelligence subscription.
-        Users must provide their own Azure endpoint and API key.
-        Azure service fees are charged separately by Microsoft and are not included in the module price.
+    <p style="font-size:16px; line-height:1.8; margin-top:15px;">
+        This video demonstrates how to install the Clario OCR module from the Odoo Apps menu.
+        The process includes searching for the module, installing it, and enabling the OCR features
+        inside the Odoo environment.
     </p>
 
-    <hr style="margin:40px 0;">
-
-    <!-- Technical -->
-    <h2 style="font-size:28px;">Technical Specifications</h2>
-
     <ul style="font-size:16px; line-height:1.8;">
-        <li>Compatible with Odoo 17</li>
-        <li>Built using standard Odoo ORM architecture</li>
-        <li>No hardcoded credentials</li>
-        <li>Multi-company compatible</li>
-        <li>Fully uninstallable without database corruption</li>
+        <li>Open the Apps menu in Odoo</li>
+        <li>Search for <b>Clario OCR</b></li>
+        <li>Click Install</li>
+        <li>The module becomes available in the Accounting workflow</li>
     </ul>
 
+    <hr style="margin:30px 0;">
+
+
+    <!-- Video 2 -->
+    <h3 style="font-size:22px;">2. Using Clario OCR to Process Invoices</h3>
+
+    <div style="text-align:center; margin-top:20px;">
+        <video width="90%" autoplay muted loop playsinline preload="metadata">
+            <source src="video2.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+    </div>
+
+    <p style="font-size:16px; line-height:1.8; margin-top:15px;">
+        This video shows the complete OCR workflow. Users upload an invoice or receipt,
+        and Clario automatically extracts structured accounting data and generates a draft
+        vendor bill inside Odoo.
+    </p>
+
+    <ul style="font-size:16px; line-height:1.8;">
+        <li>Upload an invoice or receipt</li>
+        <li>Clario sends the document to Azure Document Intelligence</li>
+        <li>Extracted data is processed and validated</li>
+        <li>A draft vendor bill is automatically generated</li>
+    </ul>
+
+    <hr style="margin:30px 0;">
+
+
+    <!-- Video 3 -->
+    <h3 style="font-size:22px;">3. Azure Document Intelligence Setup</h3>
+
+    <div style="text-align:center; margin-top:20px;">
+        <video width="90%" autoplay muted loop playsinline preload="metadata">
+            <source src="video3.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+    </div>
+
+    <p style="font-size:16px; line-height:1.8; margin-top:15px;">
+        This video explains how to create a Microsoft Azure account, provision a
+        Document Intelligence resource, obtain the API endpoint and key, and configure
+        them inside Clario OCR settings in Odoo.
+    </p>
+
+    <ul style="font-size:16px; line-height:1.8;">
+        <li>Create a new account or sign in to the Azure Portal</li>
+        <li>Create a Document Intelligence resource</li>
+        <li>Copy the API Endpoint and API Key</li>
+        <li>Open Odoo → Settings → Clario OCR</li>
+        <li>Paste the endpoint and key to activate OCR processing</li>
+    </ul>
+
+    <!-- Requirements -->
     <hr style="margin:40px 0;">
+
+    <h2 style="font-size:28px;">Third-Party Service Requirement</h2>
+
+    <p style="font-size:16px; line-height:1.8;">
+        Clario OCR integrates with <b>Microsoft Azure Document Intelligence</b> to perform
+        optical character recognition (OCR) and structured data extraction from invoices
+        and receipts.
+    </p>
+
+    <p style="font-size:16px; line-height:1.8;">
+        To use OCR processing, users must provide their own Azure Document Intelligence
+        API endpoint and key within the Clario OCR settings in Odoo.
+    </p>
+
+    <p style="font-size:16px; line-height:1.8;">
+        Microsoft Azure offers a <b>free tier that includes up to 500 pages of document
+        processing per month</b>, which is sufficient for many small and medium business
+        use cases.
+    </p>
+
+    <p style="font-size:16px; line-height:1.8;">
+        Microsoft Azure is a third-party cloud service. Any usage, billing, or service limitations
+        are managed directly by Microsoft and are not included in the price of this module.
+    </p>
+
+        <!-- Technical -->
+        <h2 style="font-size:28px;">Technical Specifications</h2>
+
+        <ul style="font-size:16px; line-height:1.8;">
+            <li>Compatible with Odoo 17</li>
+            <li>Built using standard Odoo ORM architecture</li>
+            <li>No hardcoded credentials</li>
+            <li>Multi-company compatible</li>
+            <li>Fully uninstallable without database corruption</li>
+        </ul>
+
+        <hr style="margin:40px 0;">
 
     <!-- Support -->
     <h2 style="font-size:28px;">Support</h2>

@@ -199,7 +199,7 @@ class OCRDocument(models.Model):
     # ======================================================
     def _normalize_phone(self, phone):
         if not phone:
-            return phone
+            return None
         phone = str(phone).strip()
         for ch in [" ", "-", "(", ")", ".", "\t", "\n", "\r"]:
             phone = phone.replace(ch, "")

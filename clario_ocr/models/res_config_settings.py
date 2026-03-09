@@ -1,5 +1,6 @@
 from odoo import models, fields
 
+
 class ResConfigSettings(models.TransientModel):
     _inherit = 'res.config.settings'
 
@@ -11,9 +12,4 @@ class ResConfigSettings(models.TransientModel):
     azure_api_key = fields.Char(
         string="Azure API Key",
         config_parameter="clario_ocr.azure_api_key"
-    )
-
-    azure_model_id = fields.Char(
-        string="Azure Model ID",
-        config_parameter="clario_ocr.azure_model_id"
     )
