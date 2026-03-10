@@ -6,8 +6,8 @@
     "author": "Clario",
     "maintainer": "Clario",
     "license": "OPL-1",
-    # "price": 199.00,
-    # "currency": "USD",
+    "price": 60.00,
+    "currency": "USD",
 
     "depends": [
         "base",
