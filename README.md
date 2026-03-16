@@ -8,7 +8,7 @@ This project was originally developed as a **Senior Project (SP2)** at **Assumpt
 
 ---
 
-## 🚀 Features
+## Features
 
 ### Current Features
 
@@ -42,7 +42,7 @@ This project was originally developed as a **Senior Project (SP2)** at **Assumpt
 
 ---
 
-## 🧱 Tech Stack
+## Tech Stack
 
 | Component     | Technology                            |
 | ------------- | ------------------------------------- |
@@ -56,7 +56,7 @@ This project was originally developed as a **Senior Project (SP2)** at **Assumpt
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 
 ```
 odoo-17-clario-ocr/
@@ -79,7 +79,7 @@ odoo-17-clario-ocr/
 
 ---
 
-## ⚠️ Environment Requirements
+## Environment Requirements
 
 Clario OCR requires an Odoo environment that supports **third-party modules**.
 
@@ -96,7 +96,7 @@ The SaaS version does not allow custom modules and therefore cannot run Clario O
 
 ---
 
-## 🐳 Installation & Setup
+## Installation & Setup
 
 The recommended method for development and testing is using **Docker**.
 
@@ -104,7 +104,7 @@ Only **Docker Desktop** is required — no manual Odoo installation is needed.
 
 ---
 
-### 1️⃣ Clone the Repository
+### 1️. Clone the Repository
 
 ```bash
 git clone https://github.com/harry-lynnoo/odoo-17-clario-ocr.git
@@ -113,7 +113,7 @@ cd odoo-17-clario-ocr
 
 ---
 
-### 2️⃣ Start the Odoo Environment
+### 2️. Start the Odoo Environment
 
 ```bash
 docker compose up -d
@@ -127,7 +127,7 @@ This will start:
 
 ---
 
-### 3️⃣ Open Odoo
+### 3. Open Odoo
 
 Open your browser:
 
@@ -143,7 +143,7 @@ Create a database (example):
 
 ---
 
-### 4️⃣ Install Clario OCR Module
+### 4. Install Clario OCR Module
 
 Inside Odoo:
 
@@ -160,7 +160,7 @@ Clario OCR
 
 ---
 
-## ⚙️ Azure OCR Configuration
+## Azure OCR Configuration
 
 Clario OCR requires **Microsoft Azure Document Intelligence**.
 
@@ -186,7 +186,7 @@ Additional usage will follow Azure pricing.
 
 ---
 
-## 🔄 OCR Workflow
+## OCR Workflow
 
 1. Upload an invoice or receipt
 2. Document is processed via Azure OCR
@@ -196,7 +196,7 @@ Additional usage will follow Azure pricing.
 
 ---
 
-## 🧑‍💻 Developer Workflow
+## Developer Workflow
 
 Restart Odoo after code changes:
 
@@ -225,7 +225,7 @@ docker compose up -d --build
 
 ---
 
-## 🤝 Team Contribution Workflow
+## Team Contribution Workflow
 
 Pull latest changes:
 
@@ -257,7 +257,7 @@ Then open a **Pull Request → Review → Merge**
 
 ---
 
-## 🛡️ .gitignore Rules
+## .gitignore Rules
 
 ```
 db-data/
@@ -277,7 +277,7 @@ Prevents:
 
 ---
 
-## 🌐 Odoo Marketplace
+## Odoo Marketplace
 
 Clario OCR is designed to be distributed via the **Odoo Apps Marketplace**.
 
@@ -288,7 +288,7 @@ The module is available as a **one-time purchase** and can be used in:
 
 ---
 
-## 👥 Authors
+## Authors
 
 Clario Team — Assumption University:
 
@@ -298,18 +298,10 @@ Clario Team — Assumption University:
 
 ---
 
-## 📞 Support
+## Support
 
 For inquiries:
 
 ```
 ootunthein6969@gmail.com
 ```
-
----
-
-## 🎉 Clario OCR
-
-Automating invoice processing inside Odoo using AI-powered OCR.
-
----
