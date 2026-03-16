@@ -304,8 +304,3 @@ For inquiries:
 
 ```
 ootunthein6969@gmail.com
-<<<<<<< HEAD
-```
-=======
-```
->>>>>>> 9ce20797f9641a697ccbd0454ca7ae5a38f51a00
