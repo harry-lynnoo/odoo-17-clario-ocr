@@ -1,7 +1,3 @@
-Here is your **clean `README.md` content** (ready to paste directly into GitHub):
-
----
-
 # Clario — Odoo OCR Invoice Processing Addon
 
 Clario OCR is an Odoo 17 addon designed to automate supplier invoice and receipt processing using **AI-powered Optical Character Recognition (OCR)**.
