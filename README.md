@@ -1,79 +1,315 @@
-# Clario OCR – Enterprise-Grade Invoice Scanning for Odoo 17
+# Clario — Odoo OCR Invoice Processing Addon
 
-Clario OCR is an enterprise-grade invoice and receipt scanning module for Odoo 17.  
-It integrates Microsoft Azure Document Intelligence to automatically extract structured financial data from supplier invoices and receipts.
+Clario OCR is an Odoo 17 addon designed to automate supplier invoice and receipt processing using **AI-powered Optical Character Recognition (OCR)**.
 
-The module converts scanned documents into draft vendor bills with intelligent field mapping, reducing manual data entry and improving accounting efficiency.
+The module integrates **Microsoft Azure Document Intelligence** with Odoo Accounting to extract structured financial data from invoices and receipts. Extracted data is automatically used to generate **draft vendor bills**, significantly reducing manual data entry and improving accounting efficiency.
 
----
-
-## Key Features
-
-- Automatic invoice data extraction using Azure AI
-- Vendor detection and intelligent partner matching
-- VAT, subtotal, and total validation logic
-- Reference number extraction and fallback handling
-- Multi-currency support
-- Seamless integration with Odoo 17 Accounting
-- Secure Azure API key configuration via Odoo Settings
+This project was originally developed as a **Senior Project (SP2)** at **Assumption University**, and has since evolved into a deployable Odoo module.
 
 ---
 
-## Installation
+## 🚀 Features
 
-1. Copy the module into your Odoo `addons` directory.
-2. Restart the Odoo server.
-3. Update the App list.
-4. Search for **Clario OCR** and click Install.
+### Current Features
 
----
+* OCR invoice processing using **Azure Document Intelligence**
+* Automatic extraction of:
 
-## Python Dependencies
-
-If you are running Odoo in a self-hosted environment, install:
-
-pip install -r requirements.txt
-
-## Azure Configuration Guide
-
-1. Create a Microsoft Azure account.
-2. Create a **Document Intelligence** resource.
-3. Obtain your Endpoint URL and API Key.
-4. In Odoo, go to:
-
-   Settings → Clario OCR
-
-5. Enter your Azure Endpoint and API Key.
-6. Click Save.
-
-⚠ OCR processing will be disabled until Azure credentials are configured.
+  * Vendor name
+  * Invoice reference
+  * Date
+  * Subtotal
+  * VAT
+  * Total amount
+* Vendor matching with existing partners
+* Automatic creation of **draft vendor bills**
+* VAT and subtotal validation logic
+* Multi-currency support
+* Secure Azure API configuration via Odoo settings
+* Fully Dockerized development environment
 
 ---
 
-## External Service Requirement
+### Planned Enhancements
 
-This module requires a Microsoft Azure Document Intelligence subscription.
-
-Users must provide their own Azure endpoint and API key.  
-Azure service fees are charged separately by Microsoft and are not included in the module price.
-
----
-
-## Technical Specifications
-
-- Compatible with Odoo 17
-- Uses standard Odoo ORM architecture
-- No hardcoded credentials
-- Multi-company compatible
-- Fully uninstallable without data corruption
+* Advanced line-item extraction
+* AI confidence scoring
+* Thai OCR improvements
+* Vendor detection based on historical invoices
+* Invoice analytics dashboard
+* Fraud / risky invoice detection
+* LINE OA integration for mobile invoice uploads
 
 ---
 
-## Limitations
+## 🧱 Tech Stack
 
-- OCR accuracy depends on document quality and Azure service performance.
-- Internet connection is required for OCR processing.
+| Component     | Technology                            |
+| ------------- | ------------------------------------- |
+| ERP Engine    | Odoo 17                               |
+| OCR Engine    | Microsoft Azure Document Intelligence |
+| Backend       | Python (Odoo ORM)                     |
+| Database      | PostgreSQL 15                         |
+| Environment   | Docker & Docker Compose               |
+| UI            | Odoo XML Views                        |
+| Collaboration | GitHub                                |
 
-## License
+---
 
-This module is released under the OPL-1 license.
+## 📂 Project Structure
+
+```
+odoo-17-clario-ocr/
+│
+├── addons/
+│   └── clario_ocr/
+│       ├── models/
+│       ├── views/
+│       ├── security/
+│       ├── static/
+│       ├── __manifest__.py
+│       └── __init__.py
+│
+├── odoo-conf/
+│   └── odoo.conf
+│
+├── docker-compose.yml
+└── README.md
+```
+
+---
+
+## ⚠️ Environment Requirements
+
+Clario OCR requires an Odoo environment that supports **third-party modules**.
+
+### Supported environments:
+
+* Odoo.sh (official cloud hosting)
+* On-premise Odoo installations
+
+### Not supported:
+
+* Odoo Online (SaaS)
+
+The SaaS version does not allow custom modules and therefore cannot run Clario OCR.
+
+---
+
+## 🐳 Installation & Setup
+
+The recommended method for development and testing is using **Docker**.
+
+Only **Docker Desktop** is required — no manual Odoo installation is needed.
+
+---
+
+### 1️⃣ Clone the Repository
+
+```bash
+git clone https://github.com/harry-lynnoo/odoo-17-clario-ocr.git
+cd odoo-17-clario-ocr
+```
+
+---
+
+### 2️⃣ Start the Odoo Environment
+
+```bash
+docker compose up -d
+```
+
+This will start:
+
+* Odoo 17
+* PostgreSQL 15
+* Clario OCR addon
+
+---
+
+### 3️⃣ Open Odoo
+
+Open your browser:
+
+```
+http://localhost:8069
+```
+
+Create a database (example):
+
+* Database name: `clario_dev`
+* Email: any
+* Password: any
+
+---
+
+### 4️⃣ Install Clario OCR Module
+
+Inside Odoo:
+
+1. Open **Apps**
+2. Remove all filters
+3. Click **Update Apps List**
+4. Search:
+
+```
+Clario OCR
+```
+
+5. Click **Install**
+
+---
+
+## ⚙️ Azure OCR Configuration
+
+Clario OCR requires **Microsoft Azure Document Intelligence**.
+
+After installing the module:
+
+1. Go to **Settings**
+2. Open **Clario OCR Settings**
+3. Enter:
+
+   * API Endpoint
+   * API Key
+4. Click **Save**
+
+---
+
+### Azure Free Tier
+
+Microsoft Azure provides a **free tier**:
+
+* Up to **500 pages per month**
+
+Additional usage will follow Azure pricing.
+
+---
+
+## 🔄 OCR Workflow
+
+1. Upload an invoice or receipt
+2. Document is processed via Azure OCR
+3. Data is extracted and validated
+4. Draft vendor bill is generated
+5. User reviews and confirms
+
+---
+
+## 🧑‍💻 Developer Workflow
+
+Restart Odoo after code changes:
+
+```bash
+docker compose restart odoo
+```
+
+View logs:
+
+```bash
+docker compose logs -f odoo
+```
+
+Stop services:
+
+```bash
+docker compose down
+```
+
+Rebuild if needed:
+
+```bash
+docker compose down
+docker compose up -d --build
+```
+
+---
+
+## 🤝 Team Contribution Workflow
+
+Pull latest changes:
+
+```bash
+git pull origin main
+```
+
+Create a feature branch:
+
+```bash
+git checkout -b feature/your-feature
+```
+
+Push your branch:
+
+```bash
+git push -u origin feature/your-feature
+```
+
+Commit changes:
+
+```bash
+git add .
+git commit -m "Your commit message"
+git push
+```
+
+Then open a **Pull Request → Review → Merge**
+
+---
+
+## 🛡️ .gitignore Rules
+
+```
+db-data/
+__pycache__/
+*.log
+*.pyc
+*.pyo
+.env
+```
+
+Prevents:
+
+* Large database files
+* Cache
+* Logs
+* Secrets
+
+---
+
+## 🌐 Odoo Marketplace
+
+Clario OCR is designed to be distributed via the **Odoo Apps Marketplace**.
+
+The module is available as a **one-time purchase** and can be used in:
+
+* Odoo.sh
+* On-premise Odoo
+
+---
+
+## 👥 Authors
+
+Clario Team — Assumption University:
+
+* Thu Ya Myint Myat Thein
+* S Harry Lynn Oo
+* Hein Htet Moe Tun
+
+---
+
+## 📞 Support
+
+For inquiries:
+
+```
+ootunthein6969@gmail.com
+```
+
+---
+
+## 🎉 Clario OCR
+
+Automating invoice processing inside Odoo using AI-powered OCR.
+
+---
