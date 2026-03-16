@@ -305,11 +305,3 @@ For inquiries:
 ```
 ootunthein6969@gmail.com
 ```
-
----
-
-## 🎉 Clario OCR
-
-Automating invoice processing inside Odoo using AI-powered OCR.
-
----
