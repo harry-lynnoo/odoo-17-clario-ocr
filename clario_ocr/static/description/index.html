@@ -64,6 +64,128 @@
 
     <hr style="margin:40px 0;">
 
+    <!-- Installation and Setup Guide -->
+    <h2 style="font-size:28px;">Installation and Setup Guide</h2>
+
+    <h3 style="font-size:22px; margin-top:20px;">1. Deployment Options Overview</h3>
+
+    <p style="font-size:16px; line-height:1.8;">
+        The Clario OCR module requires an Odoo environment that supports third-party modules.
+        Users can deploy the system using either cloud-based hosting (Odoo.sh) or an on-premise installation.
+    </p>
+
+    <p style="font-size:16px; line-height:1.8;">
+        <b>Odoo Online (SaaS version) does not support custom modules</b> and is therefore not compatible with Clario OCR.
+    </p>
+
+
+    <h3 style="font-size:22px; margin-top:20px;">2. Option A: Cloud Deployment (Odoo.sh)</h3>
+
+    <p style="font-size:16px; line-height:1.8;">
+        Users may deploy Clario OCR using <b>Odoo.sh</b>, which is the official cloud hosting platform for Odoo.
+    </p>
+
+    <ul style="font-size:16px; line-height:1.8;">
+        <li>Managed hosting</li>
+        <li>Automatic deployment</li>
+        <li>GitHub integration</li>
+    </ul>
+
+    <p style="font-size:16px; line-height:1.8;">
+        Installation steps:
+    </p>
+
+    <ul style="font-size:16px; line-height:1.8;">
+        <li>Create an Odoo.sh project</li>
+        <li>Link a GitHub repository containing the Clario OCR module</li>
+        <li>Deploy the project</li>
+        <li>Install the module from the Apps menu</li>
+    </ul>
+
+    <p style="font-size:16px; line-height:1.8;">
+        <b>Note:</b> Odoo.sh is a paid service and requires a subscription.
+    </p>
+
+
+    <h3 style="font-size:22px; margin-top:20px;">3. Option B: Local Deployment (On Premise, Recommended for Testing)</h3>
+
+    <p style="font-size:16px; line-height:1.8;">
+        For development, testing, or cost-effective usage, users can deploy Odoo locally.
+    </p>
+
+
+    <h4 style="font-size:20px; margin-top:15px;">Method 1: Docker Setup (Recommended)</h4>
+
+    <p style="font-size:16px; line-height:1.8;">
+        This is the recommended approach due to its simplicity and consistency.
+    </p>
+
+    <p style="font-size:16px; line-height:1.8;">
+        <b>Requirements:</b>
+    </p>
+
+    <ul style="font-size:16px; line-height:1.8;">
+        <li>Docker</li>
+        <li>Docker Compose</li>
+    </ul>
+
+    <p style="font-size:16px; line-height:1.8;">
+        <b>Steps:</b>
+    </p>
+
+    <pre style="background:#f6f6f6; padding:12px; border-radius:8px; overflow:auto; margin:10px 0; line-height:1.5;">
+    git clone https://github.com/harry-lynnoo/odoo-17-clario-ocr.git
+    cd odoo-17-clario-ocr</pre>
+
+    <pre style="background:#f6f6f6; padding:12px; border-radius:8px; overflow:auto; margin:10px 0; line-height:1.5;">
+    docker-compose up</pre>
+
+    <p style="font-size:16px; line-height:1.8;">
+        Open Odoo in your browser:
+    </p>
+
+    <pre style="background:#f6f6f6; padding:12px; border-radius:8px; margin:10px 0;">
+    http://localhost:8069</pre>
+
+    <p style="font-size:16px; line-height:1.8;">
+        Create a database and log in to start using the system.
+    </p>
+
+
+    <h4 style="font-size:20px; margin-top:15px;">Method 2: Manual Installation (Advanced Users)</h4>
+
+    <p style="font-size:16px; line-height:1.8;">
+        Users may also install Odoo manually using Python and PostgreSQL.
+    </p>
+
+    <p style="font-size:16px; line-height:1.8;">
+        <b>Requirements:</b>
+    </p>
+
+    <ul style="font-size:16px; line-height:1.8;">
+        <li>Python (3.x)</li>
+        <li>PostgreSQL</li>
+        <li>Odoo 17 source code</li>
+    </ul>
+
+    <p style="font-size:16px; line-height:1.8;">
+        <b>Steps:</b>
+    </p>
+
+    <ul style="font-size:16px; line-height:1.8;">
+        <li>Install dependencies (Python and PostgreSQL)</li>
+        <li>Download Odoo 17 source code</li>
+        <li>Configure the <b>odoo.conf</b> file</li>
+        <li>Add the Clario OCR module to the addons directory</li>
+    </ul>
+
+    <pre style="background:#f6f6f6; padding:12px; border-radius:8px; overflow:auto; margin:10px 0; line-height:1.5;">
+    python odoo-bin</pre>
+
+    <p style="font-size:16px; line-height:1.8;">
+        Access Odoo via browser and create a database to begin using the system.
+    </p>
+
     <!-- Video Guides -->
     <h2 style="font-size:28px;">Video Guides</h2>
 
@@ -139,7 +261,7 @@
         <li>Create a new account or sign in to the Azure Portal</li>
         <li>Create a Document Intelligence resource</li>
         <li>Copy the API Endpoint and API Key</li>
-        <li>Open Odoo &rarr; Settings &rarr; Clario OCR</li>
+        <li>Open Odoo → Settings → Clario OCR</li>
         <li>Paste the endpoint and key to activate OCR processing</li>
     </ul>
 
@@ -192,9 +314,6 @@
 
 <ul style="font-size:16px; line-height:1.8;">
     <li><a href="mailto:ootunthein6969@gmail.com">ootunthein6969@gmail.com</a></li>
-    <li><a href="mailto:u6530227@au.edu">u6530227@au.edu</a></li>
-    <li><a href="mailto:u6530227@au.edu">u6530394@au.edu</a></li>
-    <li><a href="mailto:u6530227@au.edu">u6530241@au.edu</a></li>
 </ul>
 
 </section>
