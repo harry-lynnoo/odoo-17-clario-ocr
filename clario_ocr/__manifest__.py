@@ -27,6 +27,7 @@
         "views/search.xml",
         "views/invoice.xml",
         "views/receipt.xml",
+        "views/res_config_settings_view.xml",
     ],
 
     "images": [

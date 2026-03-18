@@ -10,6 +10,15 @@ from odoo import models, fields, api, _
 from odoo.exceptions import UserError
 
 from .azure import AzureInvoiceService
+from .ocr_helpers.document_processor import process_document_data
+from .ocr_helpers.utils import safe_float, detect_currency
+from .ocr_helpers.financials import compute_financials
+from .ocr_helpers.cleaners import (
+    normalize_phone,
+    clean_text_field,
+    format_structured_address,
+)
+from .ocr_helpers.vendor_bill import create_vendor_bill
 
 _logger = logging.getLogger(__name__)
 
@@ -125,8 +134,9 @@ class OCRDocument(models.Model):
     total_incl_tax = fields.Monetary(
         related="total_amount", currency_field="currency_id", readonly=True
     )
+    
     # ======================================================
-    # 5) TOTALS (Clear meanings)
+    # 5) TOTALS (Clear meanings) - YOUR FRIEND'S FIELDS
     # ======================================================
     subtotal_excl_vat_excl_discount = fields.Monetary(
         string="Subtotal (Excl VAT, Excl Discount)",
@@ -147,7 +157,12 @@ class OCRDocument(models.Model):
         string="Total Payable (Incl VAT, Incl Discount)",
         currency_field="currency_id",
     )
-
+    
+    vat_type = fields.Selection(
+        [("included", "Included"), ("excluded", "Excluded"), ("unknown", "Unknown")],
+        string="VAT Type",
+        default="unknown",
+    )
 
     # ======================================================
     # 6) LOGS & OCR META
@@ -195,189 +210,7 @@ class OCRDocument(models.Model):
     )
 
     # ======================================================
-    # HELPERS
-    # ======================================================
-    def _normalize_phone(self, phone):
-        if not phone:
-            return None
-        phone = str(phone).strip()
-        for ch in [" ", "-", "(", ")", ".", "\t", "\n", "\r"]:
-            phone = phone.replace(ch, "")
-        return phone
-
-    def _safe_float(self, v):
-        try:
-            if v is None or v == "":
-                return None
-            return float(v)
-        except Exception:
-            return None
-
-    def _detect_currency(self, code_from_azure):
-        if code_from_azure:
-            cur = self.env["res.currency"].search([("name", "=", code_from_azure)], limit=1)
-            if cur:
-                return cur
-        return self.env.company.currency_id
-
-    def _format_structured_address(self, addr_struct):
-        if not addr_struct or not isinstance(addr_struct, dict):
-            return None
-
-        # Prefer RAW if exists (cleanest full address)
-        raw = addr_struct.get("raw")
-        if raw:
-            raw = raw.replace("\n", " ")
-            raw = re.sub(r"\s+", " ", raw).strip()
-            return raw
-
-        parts = []
-        seen = set()
-
-        for key in [
-            "house",
-            "unit",
-            "street_address",
-            "house_number",
-            "road",
-            "city_district",
-            "city",
-            "postal_code",
-            "country_region",
-        ]:
-            val = addr_struct.get(key)
-            if val:
-                clean_val = val.replace("\n", " ")
-                clean_val = re.sub(r"\s+", " ", clean_val).strip()
-
-                # prevent duplication
-                if clean_val not in seen:
-                    seen.add(clean_val)
-                    parts.append(clean_val)
-
-        return ", ".join(parts) if parts else None
-
-    # ======================================================
-    # STRUCTURAL CLEANING (Non-Financial Deterministic Fixes)
-    # ======================================================
-
-    def _clean_vendor_name(self, name):
-        if not name:
-            return name
-
-        name = name.replace("\n", " ").strip()
-
-        # Remove anything after pipe containing branch info
-        name = re.sub(r"\|\s*.*?(รหัสสาขา|Branch).*?$", "", name, flags=re.IGNORECASE)
-
-        # Remove duplicate spaces
-        name = re.sub(r"\s+", " ", name).strip()
-
-        return name
-
-
-
-    def _clean_text_field(self, value):
-        if not value:
-            return value
-        value = value.replace("\n", " ")
-        value = re.sub(r"\s+", " ", value).strip()
-        return value
-    
-    def _fallback_extract_customer_tax_id(self, data):
-        """
-        Deterministic fallback for Thai receipts.
-        Rules:
-        1. Prefer explicit Customer ID label
-        2. Avoid picking vendor tax ID
-        3. Only fallback to generic 13-digit if safe
-        """
-
-        if data.get("customer_tax_id"):
-            return data.get("customer_tax_id")
-
-        raw_text = data.get("raw_text") or ""
-        vendor_tax = data.get("vendor_tax_id")
-
-        # 1️⃣ STRICT match: Customer ID label only
-        match = re.search(
-            r"Customer\s*ID\s*[:\-]?\s*\n?\s*(\d{13})",
-            raw_text,
-            re.IGNORECASE
-        )
-        if match:
-            return match.group(1)
-
-        # 2️⃣ Thai label for customer tax
-        match = re.search(
-            r"ลูกค้า.*?(?:Tax\s*ID|เลขประจำตัวผู้เสียภาษี).*?(\d{13})",
-            raw_text,
-            re.IGNORECASE | re.DOTALL
-        )
-        if match:
-            val = match.group(1)
-            if val != vendor_tax:
-                return val
-
-        # 3️⃣ SAFE fallback: find all 13-digit numbers except vendor tax
-        candidates = re.findall(r"\b\d{13}\b", raw_text)
-        for num in candidates:
-            if num != vendor_tax:
-                return num
-
-        return None
-    
-    def _fallback_extract_reference(self, data):
-        raw_text = data.get("raw_text") or ""
-        invoice_id = data.get("invoice_id")
-        vendor_phone = data.get("vendor_phone")
-        vendor_tax = data.get("vendor_tax_id")
-
-        patterns = [
-            r"Ref\s*ABB\.?\s*No\.?\s*[:\-]?\s*([A-Za-z0-9\-\/]+)",
-            r"ABB\s*No\.?\s*[:\-]?\s*([A-Za-z0-9\-\/]+)",
-            r"Ref\s*No\.?\s*[:\-]?\s*([A-Za-z0-9\-\/]+)",
-            r"Reference\s*No\.?\s*[:\-]?\s*([A-Za-z0-9\-\/]+)",
-            r"เลขที่อ้างอิง\s*[:\-]?\s*([A-Za-z0-9\-\/]+)",
-            r"เลขอ้างอิง\s*[:\-]?\s*([A-Za-z0-9\-\/]+)",
-            r"เลขที่คำสั่งซื้อ\s*[:\-]?\s*([A-Za-z0-9\-\/]+)",
-            r"เลขที่ใบกำกับ\s*[:\-]?\s*([A-Za-z0-9\-\/]+)",
-        ]
-
-        for p in patterns:
-            m = re.search(p, raw_text, re.IGNORECASE)
-            if m:
-                ref = m.group(1).strip()
-                if ref and ref not in [invoice_id, vendor_phone, vendor_tax]:
-                    return ref
-
-        # Strict ABB pattern
-        m = re.search(r"\bABB\d{8,}\b", raw_text)
-        if m:
-            ref = m.group(0)
-            if ref not in [invoice_id, vendor_phone, vendor_tax]:
-                return ref
-
-        # Strict CP pattern
-        m = re.search(r"\bCP[A-Z0-9]{6,}\b", raw_text)
-        if m:
-            ref = m.group(0)
-            if ref not in [invoice_id, vendor_phone, vendor_tax]:
-                return ref
-
-        # Long numeric reference (minimum 12 digits only)
-        m = re.search(r"\b\d{12,}\b", raw_text)
-        if m:
-            ref = m.group(0)
-            if ref not in [invoice_id, vendor_phone, vendor_tax]:
-                return ref
-
-        return None
-
-
-
-    # ======================================================
-    # CREATE / WRITE
+    # CREATE / WRITE (KEEP YOURS)
     # ======================================================
     @api.model_create_multi
     def create(self, vals_list):
@@ -402,7 +235,7 @@ class OCRDocument(models.Model):
         return super().write(vals)
 
     # ======================================================
-    # VIEW BUTTON ACTIONS
+    # VIEW BUTTON ACTIONS (KEEP YOURS + ADD FRIEND'S)
     # ======================================================
     def action_retry(self):
         for rec in self:
@@ -432,115 +265,20 @@ class OCRDocument(models.Model):
         }
 
     # ======================================================
-    # VENDOR BILL CREATION
+    # VENDOR BILL CREATION - USE FRIEND'S IMPLEMENTATION
     # ======================================================
-    def _find_or_create_vendor_partner(self):
-        self.ensure_one()
-
-        if not self.vendor_name:
-            raise UserError(_("Vendor information is missing."))
-
-        vat = (self.vendor_tax_id or "").strip() or False
-        phone = self._normalize_phone(self.vendor_phone)
-
-        domain = [("supplier_rank", ">", 0)]
-        if vat:
-            domain = [("vat", "=", vat)] + domain
-        else:
-            domain = [("name", "=", self.vendor_name)] + domain
-
-        partner = self.env["res.partner"].search(domain, limit=1)
-
-        if not partner:
-            partner = self.env["res.partner"].create({
-                "name": self.vendor_name,
-                "vat": vat,
-                "phone": phone,
-                "website": self.vendor_website,
-                "supplier_rank": 1,
-            })
-        else:
-            upd = {}
-            if vat and not partner.vat:
-                upd["vat"] = vat
-            if phone and not partner.phone:
-                upd["phone"] = phone
-            if self.vendor_website and not partner.website:
-                upd["website"] = self.vendor_website
-            if upd:
-                partner.write(upd)
-
-        return partner
-
     def action_create_vendor_bill(self):
-        self.ensure_one()
-
-        if self.vendor_bill_id:
-            raise UserError(_("Vendor Bill already created."))
-
-        partner = self._find_or_create_vendor_partner()
-
-        if not self.line_ids:
-            raise UserError(_("No line items found."))
-
-        # Find 7% purchase tax
-        tax_7 = self.env["account.tax"].search([
-            ("amount", "=", 7),
-            ("type_tax_use", "=", "purchase"),
-        ], limit=1)
-
-        invoice_lines = []
-
-        for line in self.line_ids:
-            unit_price = line.unit_price or 0.0
-
-            # If receipt includes VAT, remove VAT portion
-            if self.vat_amount:
-                unit_price = round(unit_price / 1.07, 6)
-
-            invoice_lines.append((0, 0, {
-                "name": line.description or "",
-                "quantity": line.quantity or 1.0,
-                "price_unit": unit_price,
-                "tax_ids": [(6, 0, [tax_7.id])] if tax_7 else False,
-            }))
-
-        bill = self.env["account.move"].create({
-            "move_type": "in_invoice",
-            "partner_id": partner.id,
-            "invoice_date": self.invoice_date,
-            "invoice_origin": self.name,
-            "invoice_line_ids": invoice_lines,
-        })
-
-        # Apply discount as negative line
-        if self.discount_amount:
-            bill.write({
-                "invoice_line_ids": [(0, 0, {
-                    "name": "Invoice Discount",
-                    "quantity": 1,
-                    "price_unit": -abs(self.discount_amount),
-                    "tax_ids": False,
-                })]
-            })
-
-        self.vendor_bill_id = bill.id
-
-        return {
-            "type": "ir.actions.act_window",
-            "res_model": "account.move",
-            "res_id": bill.id,
-            "view_mode": "form",
-        }
+        """Use friend's vendor_bill.create_vendor_bill function"""
+        return create_vendor_bill(self)
 
     # ======================================================
-    # OCR RUN
+    # OCR RUN - MERGED APPROACH
     # ======================================================
     def action_run_ocr(self):
         self.ensure_one()
 
         # ------------------------------------------------------
-        # GUARDS
+        # GUARDS (YOURS)
         # ------------------------------------------------------
         if not self.file:
             raise UserError(_("Please upload a document first."))
@@ -558,23 +296,21 @@ class OCRDocument(models.Model):
 
         try:
             # ------------------------------------------------------
-            # AZURE SERVICE (Marketplace Safe)
+            # AZURE SERVICE (YOUR CONFIGURATION APPROACH)
             # ------------------------------------------------------
-            try:
-                service = AzureInvoiceService(self.env)
-            except UserError:
-                raise UserError(_(
-                    "Azure OCR is not configured.\n\n"
-                    "Go to Settings → Clario OCR → Azure Configuration."
-                ))
-
-            raw_data = service.analyze(base64.b64decode(self.file))
+            service = AzureInvoiceService(self.env)
+            
+            # Run OCR with document type (FRIEND'S analyze method with doc_type)
+            raw_data = service.analyze(
+                base64.b64decode(self.file),
+                doc_type=self.document_type
+            )
 
             if not raw_data:
                 raise UserError(_("No data returned from Azure."))
 
             # ------------------------------------------------------
-            # STORE RAW RESPONSE
+            # STORE RAW RESPONSE (YOURS)
             # ------------------------------------------------------
             self.azure_raw_response = json.dumps(
                 raw_data,
@@ -584,50 +320,10 @@ class OCRDocument(models.Model):
             )
 
             # ------------------------------------------------------
-            # STRUCTURAL CLEANING
+            # PROCESS DOCUMENT DATA (FRIEND'S document_processor)
             # ------------------------------------------------------
-            data = dict(raw_data)
-
-            data["vendor_name"] = self._clean_vendor_name(data.get("vendor_name"))
-            data["customer_name"] = self._clean_text_field(data.get("customer_name"))
-            data["vendor_website"] = self._clean_text_field(data.get("vendor_website"))
-
-            data["vendor_tax_id"] = self._clean_text_field(data.get("vendor_tax_id"))
-            data["customer_tax_id"] = self._clean_text_field(data.get("customer_tax_id"))
-
-            # ------------------------------------------------------
-            # DISCOUNT FALLBACK
-            # ------------------------------------------------------
-            if not data.get("discount_amount"):
-                raw_text = data.get("raw_text") or ""
-
-                keywords = [
-                    "ส่วนลด", "ลดราคา", "หักส่วนลด",
-                    "โปรโมชั่น", "โปรโมชัน",
-                    "Discount", "Promo"
-                ]
-
-                pattern = r"(?:%s)[^\n]*\n?\s*[-]?\s*([0-9]+\.[0-9]{2})" % "|".join(keywords)
-                m = re.search(pattern, raw_text, re.IGNORECASE)
-
-                if m:
-                    try:
-                        data["discount_amount"] = float(m.group(1))
-                    except Exception:
-                        pass
-
-            # ------------------------------------------------------
-            # THAI RECEIPT FALLBACKS
-            # ------------------------------------------------------
-            if not data.get("customer_tax_id"):
-                fallback_tax = self._fallback_extract_customer_tax_id(data)
-                if fallback_tax:
-                    data["customer_tax_id"] = fallback_tax
-
-            if not data.get("reference_number"):
-                ref_fallback = self._fallback_extract_reference(data)
-                if ref_fallback:
-                    data["reference_number"] = ref_fallback
+            data = process_document_data(raw_data)
+            data["doc_type"] = self.document_type
 
             self.post_processed_response = json.dumps(
                 data,
@@ -635,97 +331,48 @@ class OCRDocument(models.Model):
                 ensure_ascii=False,
                 default=str,
             )
+            
+            _logger.warning("=== DOC TYPE === %s", data.get("doc_type"))
+            _logger.warning("=== RAW DATA === %s", json.dumps(data, indent=2, default=str))
+
+            if not data:
+                raise UserError(_("No data returned from Azure."))
 
             # ------------------------------------------------------
-            # CURRENCY
+            # CURRENCY (FRIEND'S detect_currency)
             # ------------------------------------------------------
-            currency = self._detect_currency(data.get("currency_code"))
-
-            # ------------------------------------------------------
-            # FINANCIALS (DETERMINISTIC LOGIC)
-            # ------------------------------------------------------
-            discount_val = self._safe_float(data.get("discount_amount")) or 0.0
-            vat_val = self._safe_float(data.get("vat_amount")) or 0.0
-
-            azure_subtotal = self._safe_float(data.get("subtotal_amount"))
-            azure_total = self._safe_float(data.get("total_amount"))
-
-            items_sum = 0.0
-            found_any = False
-
-            for item in (data.get("items") or []):
-                amt = self._safe_float(item.get("amount"))
-                qty = self._safe_float(item.get("quantity"))
-                unit = self._safe_float(item.get("unit_price"))
-
-                if amt is not None:
-                    items_sum += amt
-                    found_any = True
-                elif qty is not None and unit is not None:
-                    items_sum += qty * unit
-                    found_any = True
-
-            items_sum = round(items_sum, 2) if found_any else None
-
-            items_sum_includes_vat = False
-
-            if items_sum is not None:
-                net_after_discount = items_sum - discount_val
-
-                if azure_subtotal and abs(net_after_discount - azure_subtotal) < 0.02:
-                    items_sum_includes_vat = True
-                elif azure_total and abs(net_after_discount - azure_total) < 0.02:
-                    items_sum_includes_vat = True
-                elif azure_total and vat_val and abs((net_after_discount - vat_val) - azure_total) < 0.02:
-                    items_sum_includes_vat = True
-
-            subtotal_excl_vat_excl_discount = 0.0
-            subtotal_incl_vat_excl_discount = 0.0
-            subtotal_excl_vat_incl_discount = 0.0
-            total_payable = 0.0
-
-            if items_sum is not None:
-
-                if items_sum_includes_vat:
-                    gross_incl_vat = items_sum
-                    net_incl_vat = round(gross_incl_vat - discount_val, 2)
-
-                    gross_excl_vat = round(gross_incl_vat - vat_val, 2)
-                    net_excl_vat = round(net_incl_vat - vat_val, 2)
-
-                else:
-                    gross_excl_vat = items_sum
-                    gross_incl_vat = round(gross_excl_vat + vat_val, 2)
-
-                    net_excl_vat = round(gross_excl_vat - discount_val, 2)
-                    net_incl_vat = round(net_excl_vat + vat_val, 2)
-
-                subtotal_excl_vat_excl_discount = gross_excl_vat
-                subtotal_incl_vat_excl_discount = gross_incl_vat
-                subtotal_excl_vat_incl_discount = max(net_excl_vat, 0.0)
-                total_payable = net_incl_vat
-
-            elif azure_total:
-                total_payable = azure_total
-                subtotal_incl_vat_excl_discount = azure_total
-                subtotal_excl_vat_excl_discount = round(azure_total - vat_val, 2)
+            currency = detect_currency(self.env, data.get("currency_code"))
 
             # ------------------------------------------------------
-            # ADDRESSES + PHONES
+            # FINANCIALS (FRIEND'S compute_financials)
             # ------------------------------------------------------
-            vendor_addr = self._clean_text_field(
-                self._format_structured_address(data.get("vendor_address_struct"))
-            )
+            fin = compute_financials(data, safe_float)
+            vat_type = fin.get("vat_type", "unknown")
 
-            customer_addr = self._clean_text_field(
-                self._format_structured_address(data.get("customer_address_struct"))
-            )
+            subtotal_excl_vat_excl_discount = fin["subtotal_excl_vat_excl_discount"]
+            subtotal_incl_vat_excl_discount = fin["subtotal_incl_vat_excl_discount"]
+            subtotal_excl_vat_incl_discount = fin["subtotal_excl_vat_incl_discount"]
+            total_payable = fin["total_payable"]
 
-            v_phone = self._normalize_phone(data.get("vendor_phone"))
-            c_phone = self._normalize_phone(data.get("customer_phone"))
+            discount_val = fin["discount_val"]
+            vat_val = fin["vat_val"]
+
+            self.extraction_log = fin["debug_text"]
+            _logger.info("OCR Financial Debug:\n%s", fin["debug_text"])
 
             # ------------------------------------------------------
-            # WRITE RESULT
+            # ADDRESSES + PHONES (FRIEND'S helpers)
+            # ------------------------------------------------------
+            v_phone = normalize_phone(data.get("vendor_phone"))
+            c_phone = normalize_phone(data.get("customer_phone"))
+
+            vendor_addr = format_structured_address(data.get("vendor_address_struct"))
+            customer_addr = format_structured_address(data.get("customer_address_struct"))
+            vendor_addr = clean_text_field(vendor_addr)
+            customer_addr = clean_text_field(customer_addr)
+
+            # ------------------------------------------------------
+            # WRITE RESULT (COMBINED)
             # ------------------------------------------------------
             self.write({
                 "status": "done",
@@ -760,34 +407,60 @@ class OCRDocument(models.Model):
                 "discount_amount": discount_val,
                 "vat_amount": vat_val,
                 "total_amount": total_payable,
+                "vat_type": vat_type,
 
                 "subtotal_excl_vat_excl_discount": subtotal_excl_vat_excl_discount,
                 "subtotal_incl_vat_excl_discount": subtotal_incl_vat_excl_discount,
                 "subtotal_excl_vat_incl_discount": subtotal_excl_vat_incl_discount,
                 "total_payable": total_payable,
 
-                "confidence_score": (
-                    self._safe_float(data.get("confidence_score")) or 0.0
-                ),
+                "confidence_score": (safe_float(data.get("confidence_score")) or 0.0),
             })
 
             # ------------------------------------------------------
-            # REBUILD LINE ITEMS
+            # REBUILD LINE ITEMS (FRIEND'S APPROACH)
             # ------------------------------------------------------
             lines_cmds = [(5, 0, 0)]
+            item_count = 0
 
             for item in (data.get("items") or []):
+                qty = item.get("quantity")
+                amount = item.get("amount") or 0.0
+                unit_price = item.get("unit_price") or 0.0
+
+                if self.document_type == 'receipt' and amount and not unit_price:
+                    unit_price = amount
+                    _logger.info(f"Receipt item - Setting unit_price to {unit_price} from amount {amount}")
+
+                if (qty == 0 or qty is None) and amount == 0:
+                    continue
+
+                qty = float(qty) if qty not in (None, False) else 1.0
+                unit_price = float(unit_price) if unit_price not in (None, False) else 0.0
+                amount = float(amount) if amount not in (None, False) else 0.0
+
+                _logger.info(f"Creating line item - Desc: {item.get('description')}, Qty: {qty}, Unit Price: {unit_price}, Amount: {amount}")
+
                 lines_cmds.append((0, 0, {
-                    "product_code": item.get("product_code"),
-                    "description": item.get("description"),
-                    "quantity": item.get("quantity", 1.0),
-                    "unit_price": item.get("unit_price") or item.get("amount") or 0.0,
+                    "document_id": self.id,
+                    "product_code": item.get("product_code") or "",
+                    "description": item.get("description") or "",
+                    "quantity": qty if qty > 0 else 1.0,
+                    "unit_price": unit_price,
                     "discount_amount": item.get("discount_amount", 0.0),
                     "tax_rate": item.get("tax_rate", 0.0),
-                    "total_amount": item.get("total_amount", 0.0),
+                    "tax_amount": item.get("tax_amount", 0.0),
                 }))
+                item_count += 1
 
-            self.write({"line_ids": lines_cmds})
+            if lines_cmds:
+                self.write({"line_ids": lines_cmds})
+                _logger.info(f"Created {item_count} line items for document {self.id}")
+                
+                line_count = self.env['ocr.document.line'].search_count([('document_id', '=', self.id)])
+                _logger.info(f"Verification: Found {line_count} line items in database for document {self.id}")
+            else:
+                _logger.warning("No line items were created")
 
             _logger.info("OCR processing completed for document %s", self.name)
 
